@@ -9,6 +9,26 @@
           }
         ]
       }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/colingray/Documents/Code/claude-specs/.claude/hooks/notify.py"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /Users/colingray/Documents/Code/claude-specs/.claude/hooks/notify.py"
+          }
+        ]
+      }
     ]
   },
   "permissions": {
