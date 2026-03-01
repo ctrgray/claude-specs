@@ -5,9 +5,7 @@ import subprocess
 import sys
 
 MATCH_PHRASES = re.compile(
-    r"notify me"
-    r"|notify me when (done|finished|complete)"
-    r"|notify when (done|finished|complete)"
+    r"notify( me)? when (done|finished|complete)"
     r"|let me know when (done|finished|complete)"
     r"|send (me )?(a )?notification",
     re.IGNORECASE,
@@ -34,29 +32,27 @@ for line in lines:
     if entry.get("type") == "user":
         content = entry.get("message", {}).get("content", "")
         if isinstance(content, list):
-            # Skip messages that are purely tool results
-            if all(block.get("type") == "tool_result" for block in content if isinstance(block, dict)):
+            if content and all(block.get("type") == "tool_result" for block in content if isinstance(block, dict)):
                 continue
             content = " ".join(
                 block.get("text", "") for block in content if isinstance(block, dict)
             )
-        if isinstance(content, str) and content.strip():
-            matched = bool(MATCH_PHRASES.search(content))
+        if content and content.strip():
+            matched = matched or bool(MATCH_PHRASES.search(content))
 
     elif entry.get("type") == "assistant":
         content = entry.get("message", {}).get("content", "")
         if isinstance(content, list):
-            texts = [
+            content = " ".join(
                 block.get("text", "") for block in content if isinstance(block, dict) and block.get("type") == "text"
-            ]
-            content = " ".join(texts)
-        if content.strip():
-            last_assistant_text = content.strip()
+            )
+        stripped = content.strip()
+        if stripped:
+            last_assistant_text = stripped
 
 if not matched:
     sys.exit(0)
 
-# Generate a 3-5 word summary using Claude
 try:
     import anthropic
     client = anthropic.Anthropic()
@@ -70,10 +66,11 @@ try:
     )
     summary = response.content[0].text.strip()
 except Exception:
-    words = re.sub(r"[^a-zA-Z0-9 ]", " ", last_assistant_text).split()
+    words = re.findall(r"[a-zA-Z0-9]+", last_assistant_text)
     summary = " ".join(words[:3]) if words else "Done"
 
+safe_summary = summary.replace("\\", "\\\\").replace('"', '\\"')
 subprocess.run([
     "osascript", "-e",
-    f'display notification "{summary}" with title "Claude Code" sound name "default"',
+    f'display notification "{safe_summary}" with title "Claude Code" sound name "default"',
 ])
