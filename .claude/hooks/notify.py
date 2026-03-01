@@ -38,7 +38,7 @@ for line in lines:
             content = " ".join(
                 block.get("text", "") for block in content if isinstance(block, dict)
             )
-        if content and content.strip():
+        if content.strip():
             last_user_text = content.strip()
 
     elif entry.get("type") == "assistant":
@@ -47,9 +47,8 @@ for line in lines:
             content = " ".join(
                 block.get("text", "") for block in content if isinstance(block, dict) and block.get("type") == "text"
             )
-        stripped = content.strip()
-        if stripped:
-            last_assistant_text = stripped
+        if content.strip():
+            last_assistant_text = content.strip()
 
 if not MATCH_PHRASES.search(last_user_text):
     sys.exit(0)
