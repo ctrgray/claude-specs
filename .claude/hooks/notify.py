@@ -34,11 +34,14 @@ for line in lines:
     if entry.get("type") == "user":
         content = entry.get("message", {}).get("content", "")
         if isinstance(content, list):
+            # Skip messages that are purely tool results
+            if all(block.get("type") == "tool_result" for block in content if isinstance(block, dict)):
+                continue
             content = " ".join(
                 block.get("text", "") for block in content if isinstance(block, dict)
             )
-        if MATCH_PHRASES.search(content):
-            matched = True
+        if isinstance(content, str) and content.strip():
+            matched = bool(MATCH_PHRASES.search(content))
 
     elif entry.get("type") == "assistant":
         content = entry.get("message", {}).get("content", "")
