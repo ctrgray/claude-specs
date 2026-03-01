@@ -53,9 +53,22 @@ for line in lines:
 if not matched:
     sys.exit(0)
 
-# Extract 1-3 word summary from the last assistant message
-words = re.sub(r"[^a-zA-Z0-9 ]", " ", last_assistant_text).split()
-summary = " ".join(words[:3]) if words else "Done"
+# Generate a 3-5 word summary using Claude
+try:
+    import anthropic
+    client = anthropic.Anthropic()
+    response = client.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=20,
+        messages=[{
+            "role": "user",
+            "content": f"Summarize what was accomplished in 3-5 words (no punctuation, just the words):\n\n{last_assistant_text[:500]}"
+        }]
+    )
+    summary = response.content[0].text.strip()
+except Exception:
+    words = re.sub(r"[^a-zA-Z0-9 ]", " ", last_assistant_text).split()
+    summary = " ".join(words[:3]) if words else "Done"
 
 subprocess.run([
     "osascript", "-e",
