@@ -37,8 +37,7 @@ for line in lines:
             content = " ".join(
                 block.get("text", "") for block in content if isinstance(block, dict)
             )
-        if MATCH_PHRASES.search(content):
-            matched = True
+        matched = bool(MATCH_PHRASES.search(content))
 
     elif entry.get("type") == "assistant":
         content = entry.get("message", {}).get("content", "")
